@@ -2,11 +2,13 @@
 from time import sleep as original_sleep
 from datetime import datetime
 from random import gauss
+from random import uniform
 
 # Amount of variance to be introduced
 # i.e. random time will be in the range: TIME +/- STDEV %
 STDEV = 0.5
 sleep_percentage = 1
+sleep_percentage = sleep_percentage * uniform(0.9, 1.1)
 
 
 def randomize_time(mean):
@@ -23,6 +25,7 @@ def randomize_time(mean):
 def set_sleep_percentage(percentage):
     global sleep_percentage
     sleep_percentage = percentage / 100
+    sleep_percentage = sleep_percentage * uniform(0.9, 1.1)
 
 
 def sleep(t, custom_percentage=None):
@@ -37,8 +40,8 @@ def sleep_actual(t):
 
 
 def get_time(labels):
-    """ To get a use out of this helpful function
-        catch in the same order of passed parameters """
+    """To get a use out of this helpful function
+    catch in the same order of passed parameters"""
     if not isinstance(labels, list):
         labels = [labels]
 

@@ -1,8 +1,11 @@
+# import built-in & third-party modules
 import time
 import math
+import requests
+
 from random import randint
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import WebDriverException
+
+# import InstaPy modules
 from .util import click_element
 from .util import web_address_navigator
 from .util import update_activity
@@ -10,7 +13,9 @@ from .util import get_action_delay
 from .settings import Settings
 from .xpath import read_xpath
 
-import requests
+# import exceptions
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 
 
 def get_story_data(browser, elem, action_type, logger, simulate=False):
@@ -26,18 +31,29 @@ def get_story_data(browser, elem, action_type, logger, simulate=False):
     if action_type == "user":
         try:
             reel_id = browser.execute_script(
-                "return window._sharedData.entry_data." "ProfilePage[0].graphql.user.id"
+                "return window.__additionalData[Object.keys(window.__additionalData)[0]].data.graphql.user.id"
             )
             # correct formating for elem_id
             elem_id = '"' + reel_id + '"'
             # and elem needs to be nothing
             elem = ""
         except WebDriverException:
-            logger.error(
-                "---> Sorry, this page isn't available!\t~either "
-                + "link is broken or page is removed\n"
-            )
-            return {"status": "not_ok", "reels_cnt": 0}
+            try:
+                reel_id = browser.execute_script(
+                    "return window._sharedData."
+                    "entry_data.ProfilePage[0]."
+                    "graphql.user.id"
+                )
+                # correct formating for elem_id
+                elem_id = '"' + reel_id + '"'
+                # and elem needs to be nothing
+                elem = ""
+            except WebDriverException:
+                logger.error(
+                    "--> Sorry, this page isn't available!\t~either "
+                    + "link is broken or page is removed\n"
+                )
+                return {"status": "not_ok", "reels_cnt": 0}
     else:
         reel_id = "tag:{}".format(elem)
 
@@ -70,7 +86,11 @@ def get_story_data(browser, elem, action_type, logger, simulate=False):
 
         session.cookies.set(**all_args)
 
-    headers = {"User-Agent": Settings.user_agent, "X-Requested-With": "XMLHttpRequest"}
+    headers = {
+        "User-Agent": Settings.user_agent,
+        "X-Requested-With": "XMLHttpRequest",
+        "SameSite": "Strict",
+    }
 
     data = session.get(graphql_query_url, headers=headers)
     response = data.json()
@@ -104,6 +124,7 @@ def get_story_data(browser, elem, action_type, logger, simulate=False):
                             "X-CSRFToken": csrftoken,
                             "X-Requested-With": "XMLHttpRequest",
                             "Content-Type": "application/x-www-form-urlencoded",
+                            "SameSite": "Strict",
                         }
                         response = session.post(
                             "https://www.instagram.com/stories/reel/seen",
@@ -162,8 +183,8 @@ def get_story_data(browser, elem, action_type, logger, simulate=False):
 
 def watch_story(browser, elem, logger, action_type, simulate=False):
     """
-        Load Stories, and watch it until there is no more stores
-        to watch for the related element
+    Load Stories, and watch it until there is no more stores
+    to watch for the related element
     """
 
     # make sure we work with a lower case elem
@@ -187,12 +208,12 @@ def watch_story(browser, elem, logger, action_type, simulate=False):
     if story_data["reels_cnt"] == 0:
         # nothing to watch, there is no stories
         logger.info(
-            "no stories to watch (either there is none) or we have already watched everything"
+            "No stories to watch (either there is none) or we have already watched everything"
         )
         return 0
 
     logger.info(
-        "watched {} reels from {}: {}".format(
+        "Watched {} reels from {}: {}".format(
             story_data["reels_cnt"], action_type, elem.encode("utf-8")
         )
     )

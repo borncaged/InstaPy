@@ -15,7 +15,7 @@ from .settings import Storage
 
 
 def quota_supervisor(job, update=False):
-    """ Supervise activity flow through action engines and take measures"""
+    """Supervise activity flow through action engines and take measures"""
     # --ACTION----------ENGINE--------------FILE--------------OPTION--- #
     #   Like         `like_image`       [like_util.py]      jump|sleep  #
     #   Comment      `comment_image`    [comment_util.py]   jump|sleep  #
@@ -43,7 +43,7 @@ def quota_supervisor(job, update=False):
 
 
 def controller(job):
-    """ Control and supervise """
+    """Control and supervise"""
     if not records:
         load_records()
 
@@ -91,7 +91,7 @@ def controller(job):
 
 
 def inspector(job, peaks):
-    """ Inspect action and return end result """
+    """Inspect action and return end result"""
     lc_extra_check_h, lc_extra_check_d = False, False
 
     hourly_peak = peaks[job]["hourly"]
@@ -136,8 +136,8 @@ def inspector(job, peaks):
 
 
 def stochasticity(peaks):
-    """ Generate casually chosen arbitrary peak values based on originals
-    set by the user """
+    """Generate casually chosen arbitrary peak values based on originals
+    set by the user"""
     # in future, stochasticity percentage can be added to th QS parameters
     # for users to define
     stoch_percent = random.randint(70, 85)  # over 70, below 85 would be good
@@ -180,7 +180,7 @@ def stochasticity(peaks):
 
 
 def stochast_values(peaks, orig_peaks, interval, percent):
-    """ Return randomly generated stochastic peak values """
+    """Return randomly generated stochastic peak values"""
     for job in orig_peaks:
         job_data = orig_peaks[job]
 
@@ -195,15 +195,15 @@ def stochast_values(peaks, orig_peaks, interval, percent):
 
 
 def stoch_randomizer(value, percent):
-    """ Value randomizer for stochastic flow """
+    """Value randomizer for stochastic flow"""
     stochastic_value = random.randint(int((value + 1) * percent / 100), value)
 
     return stochastic_value
 
 
 def remaining_time(sleepyhead, interval):
-    """ Calculate wake up time and return accurate or close-range random
-    sleep seconds """
+    """Calculate wake up time and return accurate or close-range random
+    sleep seconds"""
     extra_sleep_percent = 140  # actually 114 also is not that bad amount
 
     if interval == "hourly":
@@ -224,7 +224,7 @@ def remaining_time(sleepyhead, interval):
 
 
 def send_message(job, action, interval, nap):
-    """ Send information messages about QS states """
+    """Send information messages about QS states"""
     job = job.replace("_", " ")
 
     if action == "sleep":
@@ -272,8 +272,8 @@ def send_message(job, action, interval, nap):
 
 
 def toast_notification(notify, alert, job, interval):
-    """ Send toast notifications about supervising states directly to OS
-    using 'plyer' module """
+    """Send toast notifications about supervising states directly to OS
+    using 'plyer' module"""
     platform_matches = platform.startswith(("win32", "linux", "darwin"))
     if notify is True and platform_matches:
         icons = get_icons()
@@ -306,11 +306,11 @@ def toast_notification(notify, alert, job, interval):
             # DBusException: dbus-display issue on linux boxes
 
             # turn off toast notification for the rest of the session
-            configuration.update(nofity=False)
+            configuration.update(notify=False)
 
 
 def get_icons():
-    """ Return the locations of icons according to the operating system """
+    """Return the locations of icons according to the operating system"""
     # get full location of icons folder inside package
     icons_path = get_pkg_resource_path("instapy", "icons/")
 
@@ -351,7 +351,7 @@ def get_icons():
 
 
 def load_records():
-    """ Load the data from local DB file """
+    """Load the data from local DB file"""
     db, profile_id = get_database()
     conn = sqlite3.connect(db)
 
@@ -393,7 +393,7 @@ def load_records():
 
 
 def get_record(job, interval):
-    """ Quickly get and return daily or hourly records """
+    """Quickly get and return daily or hourly records"""
     try:
         if interval == "hourly":
             record = records[today][this_hour][job]
@@ -409,7 +409,7 @@ def get_record(job, interval):
 
 
 def update_record(job):
-    """ Update the corresponding record stored in the global Storage class """
+    """Update the corresponding record stored in the global Storage class"""
     # the order of the 2 conditional statements below is crucial
     if today not in records.keys():
         records.update({today: {this_hour: {}}})

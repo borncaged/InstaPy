@@ -1,7 +1,12 @@
+# import built-in & third-party modules
 import requests
 import sqlite3
+
+# import InstaPy modules
 from .settings import Settings
 from .database_engine import get_database
+
+# import exceptions
 
 
 def get_server_endpoint(topic):
@@ -20,7 +25,7 @@ def get_server_endpoint(topic):
 
 
 def get_recent_posts_from_pods(topic, logger):
-    """ fetches all recent posts shared with pods """
+    """fetches all recent posts shared with pods"""
     params = {"topic": topic}
     r = requests.get(get_server_endpoint(topic) + "/getRecentPostsV1", params=params)
     try:
@@ -37,12 +42,15 @@ def get_recent_posts_from_pods(topic, logger):
 
 
 def group_posts(posts, logger):
+    no_comments_post_ids = []
     light_post_ids = []
     normal_post_ids = []
     heavy_post_ids = []
     for postobj in posts:
         try:
-            if postobj["mode"] == "light":
+            if postobj["mode"] == "no_comments":
+                no_comments_post_ids.append(postobj)
+            elif postobj["mode"] == "light":
                 light_post_ids.append(postobj)
             elif postobj["mode"] == "heavy":
                 heavy_post_ids.append(postobj)
@@ -53,11 +61,11 @@ def group_posts(posts, logger):
                 "Failed with Error {}, please upgrade your instapy".format(err)
             )
             normal_post_ids.append(postobj)
-    return light_post_ids, normal_post_ids, heavy_post_ids
+    return no_comments_post_ids, light_post_ids, normal_post_ids, heavy_post_ids
 
 
 def share_my_post_with_pods(postid, topic, engagement_mode, logger):
-    """ share_my_post_with_pod """
+    """share_my_post_with_pod"""
     params = {"postid": postid, "topic": topic, "mode": engagement_mode}
     r = requests.get(get_server_endpoint(topic) + "/publishMyLatestPost", params=params)
     try:
@@ -74,7 +82,9 @@ def share_my_post_with_pods(postid, topic, engagement_mode, logger):
 
 
 def share_with_pods_restriction(operation, postid, limit, logger):
-    """ Keep track of already shared posts """
+    """Keep track of already shared posts"""
+    conn = None
+
     try:
         # get a DB and start a connection
         db, id = get_database()
@@ -122,7 +132,7 @@ def share_with_pods_restriction(operation, postid, limit, logger):
                 else:
                     exceed_msg = "" if share_data["times"] == limit else "more than "
                     logger.info(
-                        "---> {} has already been shared with pods {}{} times".format(
+                        "--> {} has already been shared with pods {}{} times".format(
                             postid, exceed_msg, str(limit)
                         )
                     )
@@ -142,7 +152,9 @@ def share_with_pods_restriction(operation, postid, limit, logger):
 
 
 def comment_restriction(operation, postid, limit, logger):
-    """ Keep track of already shared posts """
+    """Keep track of already shared posts"""
+    conn = None
+
     try:
         # get a DB and start a connection
         db, id = get_database()
@@ -190,7 +202,7 @@ def comment_restriction(operation, postid, limit, logger):
                 else:
                     exceed_msg = "" if share_data["times"] == limit else "more than "
                     logger.info(
-                        "---> {} has been commented on {}{} times".format(
+                        "--> {} has been commented on {}{} times".format(
                             postid, exceed_msg, str(limit)
                         )
                     )
